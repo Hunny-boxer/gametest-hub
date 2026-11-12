@@ -1,0 +1,30 @@
+
+services:
+  database:
+    image: postgres:18
+    container_name: gametest-hub-db
+
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: gametesthub
+      POSTGRES_USER: gametesthub
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-local_dev_only_change_me}
+
+    ports:
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
+
+    volumes:
+      - gametest-hub-postgres-data:/var/lib/postgresql
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U gametesthub -d gametesthub
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  gametest-hub-postgres-data:
