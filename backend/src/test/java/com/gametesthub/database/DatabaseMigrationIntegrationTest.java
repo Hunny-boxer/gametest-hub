@@ -4,22 +4,20 @@ package com.gametesthub.database;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.List;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
+import org.flywaydb.core.Flyway;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.NONE
-)
 @Testcontainers
 class DatabaseMigrationIntegrationTest {
 
@@ -30,76 +28,75 @@ class DatabaseMigrationIntegrationTest {
                     .withUsername("gametesthub")
                     .withPassword("test-password");
 
-    @DynamicPropertySource
-    static void configureDatabase(
-            DynamicPropertyRegistry registry
-    ) {
-        registry.add(
-                "spring.datasource.url",
-                POSTGRES::getJdbcUrl
-        );
-
-        registry.add(
-                "spring.datasource.username",
-                POSTGRES::getUsername
-        );
-
-        registry.add(
-                "spring.datasource.password",
-                POSTGRES::getPassword
-        );
+    @BeforeEach
+    void applyMigrations() {
+        Flyway.configure()
+                .dataSource(
+                        POSTGRES.getJdbcUrl(),
+                        POSTGRES.getUsername(),
+                        POSTGRES.getPassword()
+                )
+                .locations("classpath:db/migration")
+                .load()
+                .migrate();
     }
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
 
     @Test
     @DisplayName("Flyway applies the initial database migration")
-    void shouldApplyInitialMigration() {
+    void shouldApplyInitialMigration() throws SQLException {
 
-        Integer migrationCount = jdbcTemplate.queryForObject(
-                """
-                SELECT COUNT(*)
-                FROM flyway_schema_history
-                WHERE version = '1'
-                  AND success = TRUE
-                """,
-                Integer.class
-        );
-
-        assertEquals(1, migrationCount);
+        try (
+                Connection connection = openConnection();
+                PreparedStatement statement = connection.prepareStatement(
+                        """
+                        SELECT COUNT(*)
+                        FROM flyway_schema_history
+                        WHERE version = '1'
+                          AND success = TRUE
+                        """
+                );
+                ResultSet resultSet = statement.executeQuery()
+        ) {
+            assertTrue(resultSet.next());
+            assertEquals(1, resultSet.getInt(1));
+        }
     }
 
     @Test
     @DisplayName("Initial migration creates all foundation tables")
-    void shouldCreateFoundationTables() {
+    void shouldCreateFoundationTables() throws SQLException {
 
-        List<String> actualTables = jdbcTemplate.queryForList(
-                """
-                SELECT table_name
-                FROM information_schema.tables
-                WHERE table_schema = 'public'
-                  AND table_name IN (
-                      'app_users',
-                      'workspaces',
-                      'workspace_members',
-                      'projects'
-                  )
-                """,
-                String.class
-        );
+        try (
+                Connection connection = openConnection();
+                PreparedStatement statement = connection.prepareStatement(
+                        """
+                        SELECT COUNT(*)
+                        FROM information_schema.tables
+                        WHERE table_schema = 'public'
+                          AND table_name IN (
+                              'app_users',
+                              'workspaces',
+                              'workspace_members',
+                              'projects'
+                          )
+                        """
+                );
+                ResultSet resultSet = statement.executeQuery()
+        ) {
+            assertTrue(resultSet.next());
+            assertEquals(
+                    4,
+                    resultSet.getInt(1),
+                    "All four foundation tables must exist"
+            );
+        }
+    }
 
-        List<String> expectedTables = List.of(
-                "app_users",
-                "workspaces",
-                "workspace_members",
-                "projects"
-        );
-
-        assertTrue(
-                actualTables.containsAll(expectedTables),
-                "All four foundation tables must exist. Found: "
-                        + actualTables
+    private Connection openConnection() throws SQLException {
+        return DriverManager.getConnection(
+                POSTGRES.getJdbcUrl(),
+                POSTGRES.getUsername(),
+                POSTGRES.getPassword()
         );
     }
 }
