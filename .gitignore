@@ -1,0 +1,48 @@
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+!.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+service-account*.json
+
+# Java / Maven
+**/target/
+*.class
+hs_err_pid*
+replay_pid*
+
+# Node.js / React
+**/node_modules/
+**/dist/
+**/.vite/
+**/coverage/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Test reports
+**/test-results/
+**/playwright-report/
+**/allure-results/
+**/allure-report/
+**/surefire-reports/
+**/failsafe-reports/
+
+# Logs
+*.log
+
+# Local infrastructure data
+infra/.data/
