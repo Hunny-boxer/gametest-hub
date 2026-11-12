@@ -24,8 +24,8 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 class DatabaseMigrationIntegrationTest {
 
     @Container
-    static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:18")
+    static final PostgreSQLContainer POSTGRES =
+            new PostgreSQLContainer("postgres:18")
                     .withDatabaseName("gametesthub_test")
                     .withUsername("gametesthub")
                     .withPassword("test-password");
