@@ -10,7 +10,7 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/gametesthub}
     username: ${DB_USERNAME:gametesthub}
-    password: ${DB_PASSWORD:}
+    password: ${DB_PASSWORD:local_dev_only_change_me}
     driver-class-name: org.postgresql.Driver
 
   jpa:
