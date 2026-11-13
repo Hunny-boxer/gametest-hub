@@ -72,6 +72,7 @@ class AppUserServiceTest {
     void shouldFindUserById() {
 
         UUID userId = UUID.randomUUID();
+
         AppUser user = new AppUser(
                 "test@example.com",
                 "Hunny Boxer"
@@ -88,7 +89,7 @@ class AppUserServiceTest {
     }
 
     @Test
-    void shouldFindUserByNormalizedEmail() {
+    void shouldFindUserByEmailIgnoringCase() {
 
         AppUser user = new AppUser(
                 "test@example.com",
@@ -96,7 +97,7 @@ class AppUserServiceTest {
         );
 
         when(appUserRepository.findByEmailIgnoreCase(
-                "test@example.com"
+                "TEST@example.com"
         )).thenReturn(Optional.of(user));
 
         Optional<AppUser> result =
