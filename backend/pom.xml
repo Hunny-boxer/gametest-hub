@@ -88,10 +88,17 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Standard testing -->
+        <!-- Standard testing: JUnit, Mockito and Spring Boot test support -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Spring MVC HTTP and controller testing -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
 
