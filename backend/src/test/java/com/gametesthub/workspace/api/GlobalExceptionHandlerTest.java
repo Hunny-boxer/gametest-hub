@@ -1,17 +1,18 @@
 
-package com.gametesthub.api;
+package com.gametesthub.workspace.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
+
+import com.gametesthub.api.GlobalExceptionHandler;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
