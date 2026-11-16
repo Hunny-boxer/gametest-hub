@@ -14,11 +14,11 @@ import static org.mockito.Mockito.when;
 
 import com.gametesthub.config.PasswordEncoderConfig;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -36,8 +36,17 @@ class AuthenticationServiceTest {
     private final PasswordEncoder passwordEncoder =
             new PasswordEncoderConfig().passwordEncoder();
 
-    @InjectMocks
     private AuthenticationService authenticationService;
+
+    @BeforeEach
+    void setUp() {
+
+        authenticationService = new AuthenticationService(
+                appUserService,
+                credentialRepository,
+                passwordEncoder
+        );
+    }
 
     @Test
     void shouldRegisterUserAndStoreEncodedPassword() {
