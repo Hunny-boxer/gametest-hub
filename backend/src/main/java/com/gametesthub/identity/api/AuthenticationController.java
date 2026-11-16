@@ -78,6 +78,9 @@ public class AuthenticationController {
                     );
         }
 
+        // Ensure an HTTP session exists before rotating its ID.
+        servletRequest.getSession(true);
+
         // Apply session fixation protection.
         sessionAuthenticationStrategy.onAuthentication(
                 authentication,
@@ -85,7 +88,7 @@ public class AuthenticationController {
                 servletResponse
         );
 
-        // Create a new authenticated security context.
+        // Create a fresh authenticated security context.
         SecurityContext context =
                 SecurityContextHolder.createEmptyContext();
 
@@ -121,13 +124,9 @@ public class AuthenticationController {
     ) {
     }
 
-    public record LoginResponse(
-            String email
-    ) {
+    public record LoginResponse(String email) {
     }
 
-    public record AuthenticationErrorResponse(
-            String message
-    ) {
+    public record AuthenticationErrorResponse(String message) {
     }
 }
