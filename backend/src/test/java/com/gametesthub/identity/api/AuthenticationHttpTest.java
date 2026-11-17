@@ -36,6 +36,7 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
@@ -248,6 +249,7 @@ class AuthenticationHttpTest {
     }
 
     @TestConfiguration(proxyBeanMethods = false)
+    @EnableWebSecurity
     static class TestSecurityConfiguration {
 
         @Bean
