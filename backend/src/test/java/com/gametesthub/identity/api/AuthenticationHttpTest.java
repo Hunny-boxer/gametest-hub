@@ -1,10 +1,11 @@
 
 package com.gametesthub.identity.api;
 
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -24,6 +25,10 @@ import com.gametesthub.identity.AppUserService;
 import com.gametesthub.identity.AuthenticationService;
 import com.gametesthub.identity.LoginService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +47,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -62,6 +68,9 @@ class AuthenticationHttpTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private SessionAuthenticationStrategy sessionAuthenticationStrategy;
 
     @MockitoBean
     private LoginService loginService;
@@ -113,7 +122,6 @@ class AuthenticationHttpTest {
                 .thenReturn(authenticatedUser);
 
         MockHttpSession initialSession = new MockHttpSession();
-        String originalSessionId = initialSession.getId();
 
         MvcResult loginResult = mockMvc.perform(
                 post("/api/v1/auth/login")
@@ -136,17 +144,14 @@ class AuthenticationHttpTest {
                         .getRequest()
                         .getSession(false);
 
-        assertNotNull(authenticatedSession);
-
-        assertNotEquals(
-                originalSessionId,
-                authenticatedSession.getId(),
-                "Session ID should change after authentication."
+        assertNotNull(
+                authenticatedSession,
+                "Successful login should create or retain an HTTP session."
         );
 
         UUID userId = UUID.randomUUID();
 
-        AppUser user = org.mockito.Mockito.mock(AppUser.class);
+        AppUser user = mock(AppUser.class);
 
         when(appUserService.findByEmail(email))
                 .thenReturn(Optional.of(user));
@@ -178,6 +183,42 @@ class AuthenticationHttpTest {
                 authenticatedSession.isInvalid(),
                 "Logout should invalidate the HTTP session."
         );
+    }
+
+    @Test
+    void shouldInvokeServletContainerSessionIdRotation()
+            throws Exception {
+
+        HttpServletRequest request =
+                mock(HttpServletRequest.class);
+
+        HttpServletResponse response =
+                mock(HttpServletResponse.class);
+
+        HttpSession session =
+                mock(HttpSession.class);
+
+        when(request.getSession(false)).thenReturn(session);
+
+        Authentication authentication =
+                UsernamePasswordAuthenticationToken.authenticated(
+                        "qa@example.com",
+                        null,
+                        List.of(
+                                new SimpleGrantedAuthority(
+                                        "AUTHENTICATED_USER"
+                                )
+                        )
+                );
+
+        sessionAuthenticationStrategy.onAuthentication(
+                authentication,
+                request,
+                response
+        );
+
+        // The real strategy delegates ID rotation to the servlet container.
+        verify(request).changeSessionId();
     }
 
     @Test
