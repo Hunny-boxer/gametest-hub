@@ -198,10 +198,17 @@ class AuthenticationHttpTest {
         HttpSession session =
                 mock(HttpSession.class);
 
-        // Represent a request that already has a valid HTTP session.
+        // Represent a request with an existing, valid HTTP session.
         when(request.getSession(false)).thenReturn(session);
         when(request.getSession()).thenReturn(session);
         when(request.isRequestedSessionIdValid()).thenReturn(true);
+
+        // Supply both IDs so the strategy never compares a null session ID.
+        when(session.getId())
+                .thenReturn("original-session-id", "rotated-session-id");
+
+        when(request.changeSessionId())
+                .thenReturn("rotated-session-id");
 
         Authentication authentication =
                 UsernamePasswordAuthenticationToken.authenticated(
@@ -220,7 +227,7 @@ class AuthenticationHttpTest {
                 response
         );
 
-        // The strategy delegates session ID rotation to the servlet container.
+        // Verify that the strategy delegates rotation to the servlet container.
         verify(request).changeSessionId();
     }
 
